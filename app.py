@@ -19,7 +19,7 @@ def get_bot_response():
 
     # Send request to OpenRouter API
     headers = {
-        "Authorization": f"Bearer {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}",
+        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
         "Content-Type": "application/json"
     }
 
