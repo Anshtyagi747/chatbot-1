@@ -1,15 +1,39 @@
 from flask import Flask, render_template, request
+import requests
+import os
 
 app = Flask(__name__)
+
+# Set your OpenRouter API Key here
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")  # set this on Render.com
 
 @app.route("/")
 def home():
     return render_template("index.html")
 
-@app.route("/get", methods=["GET"])
+@app.route("/get")
 def get_bot_response():
-    user_input = request.args.get('msg')
-    return f"You said: {user_input}"  # Temporary response
+    user_message = request.args.get('msg')
+    if not user_message:
+        return "Please type something!"
+
+    # Send request to OpenRouter API
+    headers = {
+        "Authorization": f"Bearer {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}",
+        "Content-Type": "application/json"
+    }
+
+    payload = {
+        "model": "openrouter/openai/gpt-3.5-turbo",
+        "messages": [{"role": "user", "content": user_message}],
+    }
+
+    try:
+        response = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload)
+        data = response.json()
+        return data["choices"][0]["message"]["content"]
+    except Exception as e:
+        return f"Error: {str(e)}"
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=10000)
+    app.run(debug=True)
