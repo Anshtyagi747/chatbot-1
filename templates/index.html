@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Smart AI ChatBot</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="chat-wrapper">
+        <div class="chat-header">🤖 Smart ChatBot</div>
+        <div id="chat-box" class="chat-box"></div>
+        <div class="input-bar">
+            <input type="text" id="user-input" placeholder="Type your message..." autocomplete="off">
+            <button onclick="sendMessage()">➤</button>
+        </div>
+    </div>
+
+    <script>
+        const input = document.getElementById("user-input");
+
+        input.addEventListener("keydown", function(e) {
+            if (e.key === "Enter") sendMessage();
+        });
+
+        function addMessage(sender, text, isTyping = false) {
+            const box = document.getElementById("chat-box");
+            const message = document.createElement("div");
+            message.className = `msg ${sender}`;
+            const bubble = document.createElement("div");
+            bubble.className = "bubble";
+            message.appendChild(bubble);
+            box.appendChild(message);
+            box.scrollTop = box.scrollHeight;
+
+            if (isTyping) {
+                bubble.innerText = "Typing...";
+                return bubble; // return reference for typing
+            } else {
+                bubble.innerHTML = text.replace(/\n/g, "<br>");
+            }
+        }
+
+        async function sendMessage() {
+            const message = input.value.trim();
+            if (!message) return;
+
+            addMessage("user", message);
+            input.value = "";
+
+            const typingBubble = addMessage("bot", "", true);
+
+            try {
+                const res = await fetch("/get", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({ message })
+                });
+
+                const data = await res.json();
+                const reply = data.reply;
+
+                // Typing animation with line breaks
+                let i = 0;
+                typingBubble.innerHTML = "";
+                const typing = setInterval(() => {
+                    if (reply.charAt(i) === "\n") {
+                        typingBubble.innerHTML += "<br>";
+                    } else {
+                        typingBubble.innerHTML += reply.charAt(i);
+                    }
+                    i++;
+                    if (i >= reply.length) clearInterval(typing);
+                }, 20);
+            } catch (err) {
+                typingBubble.innerText = "Error fetching response.";
+            }
+        }
+    </script>
+</body>
+</html>
